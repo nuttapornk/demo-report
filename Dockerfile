@@ -1,0 +1,40 @@
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build
+WORKDIR /src
+
+COPY Report/ ./
+
+RUN dotnet restore -s /src -s https://api.nuget.org/v3/index.json
+WORKDIR "/src/."
+
+RUN dotnet publish "Report.csproj" -c Release -o /app/publish --runtime alpine-x64
+
+FROM alpine:3.17
+WORKDIR /app
+
+ENV ASPNETCORE_URLS=http://*:80
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+
+RUN apk add --no-cache wget libgdiplus-dev
+RUN apk add --upgrade openssl1.1-compat-dev
+
+#RUN echo 'https://dl-cdn.alpinelinux.org/alpine/v3.14/community' >> /etc/apk/repositories
+#RUN echo 'https://dl-cdn.alpinelinux.org/alpine/v3.14/main' >> /etc/apk/repositories
+#RUN apk add --no-cache wkhtmltopdf
+
+RUN wget --quiet https://github.com/rdvojmoc/DinkToPdf/raw/v1.0.8/v0.12.4/64%20bit/libwkhtmltox.so -O libwkhtmltox.so && \
+        wget --quiet https://github.com/rdvojmoc/DinkToPdf/raw/v1.0.8/v0.12.4/64%20bit/libwkhtmltox.dll -O libwkhtmltox.dll
+
+#RUN wget -P /app https://github.com/rdvojmoc/DinkToPdf/raw/v1.0.8/v0.12.4/64%20bit/libwkhtmltox.so && \
+    #wget -P /app https://github.com/rdvojmoc/DinkToPdf/raw/master/v0.12.4/64%20bit/libwkhtmltox.dylib && \
+    #wget -P /app https://github.com/rdvojmoc/DinkToPdf/raw/master/v0.12.4/64%20bit/libwkhtmltox.so
+
+
+COPY ./font/* ./
+RUN mkdir -p /usr/share/fonts/truetype/
+RUN install -m644 *.ttf /usr/share/fonts/truetype/
+RUN install -m644 *.otf /usr/share/fonts/truetype/
+RUN rm -rf /var/cache/apk/*
+EXPOSE 80
+
+COPY --from=build /app/publish ./
+ENTRYPOINT ["./Report"]
