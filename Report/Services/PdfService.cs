@@ -29,10 +29,10 @@ namespace Report.Services
                 ColorMode = ColorMode.Color,
                 Orientation = Orientation.Portrait,
                 PaperSize = PaperKind.A4,
-                Margins = new MarginSettings { Top=10,Bottom=10,Left=10, Right=10},
+                Margins = new MarginSettings { Top=10,Bottom=10,Left=10, Right=10},                
                 DocumentTitle = "DemoReport"
             }, new ObjectSettings
-            {
+            {               
                 PagesCount = true,
                 HtmlContent = content,
                 WebSettings = { DefaultEncoding = "utf-8"},
